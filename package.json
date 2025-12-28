@@ -107,6 +107,7 @@
     "react": "^19.2.0",
     "sass": "^1.94.0",
     "sass-loader": "^16.0.6",
+    "postcss-syntax": "^0.36.2",
     "script-loader": "^0.7.2",
     "serve": "^14.2.5",
     "stylelint": "^16.25.0",

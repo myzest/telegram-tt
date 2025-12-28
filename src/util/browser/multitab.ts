@@ -7,6 +7,7 @@ import type { MethodArgs, Methods } from '../../api/gramjs/methods/types';
 import type { ApiInitialArgs } from '../../api/types';
 import type { GlobalState } from '../../global/types';
 
+import {  DEBUG } from '../../config';
 import { selectTabState } from '../../global/selectors';
 import {
   callApiLocal,
@@ -253,7 +254,9 @@ export function handleMessage({ data }: { data: BroadcastChannelMessage }) {
 
       if (!isFirstGlobalResolved) return;
       const global = getGlobal();
-
+      if (DEBUG) {
+        console.log('global handleMessage:', global);
+      }
       if (!selectTabState(global).isMasterTab) return;
 
       channel.postMessage({

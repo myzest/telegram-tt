@@ -269,6 +269,7 @@ class TelegramClient {
           langCode: args.langCode,
           langPack: args.langPack,
           systemLangCode: args.systemLangCode,
+          ...this.initConnectionParams,
           query: x,
           proxy: undefined, // no proxies yet.
         }),

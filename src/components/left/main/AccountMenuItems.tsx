@@ -1,5 +1,5 @@
 import { memo, useMemo } from '../../../lib/teact/teact';
-import { getActions } from '../../../global';
+// import { getActions } from '../../../global';
 
 import type { ApiUser } from '../../../api/types';
 import type { AccountInfo, CustomPeer } from '../../../types';
@@ -10,8 +10,8 @@ import { IS_SAFARI } from '../../../util/browser/windowEnvironment';
 import { getAccountSlotUrl } from '../../../util/multiaccount';
 import { REM } from '../../common/helpers/mediaDimensions';
 
-import useLang from '../../../hooks/useLang';
-import useLastCallback from '../../../hooks/useLastCallback';
+// import useLang from '../../../hooks/useLang';
+// import useLastCallback from '../../../hooks/useLastCallback';
 import useMultiaccountInfo from '../../../hooks/useMultiaccountInfo';
 
 import Avatar from '../../common/Avatar';
@@ -25,48 +25,33 @@ type OwnProps = {
   onSelectCurrent?: VoidFunction;
 };
 
-const NOTIFICATION_DURATION = 7000;
+// const NOTIFICATION_DURATION = 7000;
 
 const AccountMenuItems = ({
   currentUser,
   totalLimit,
   onSelectCurrent,
 }: OwnProps) => {
-  const { showNotification } = getActions();
-  const lang = useLang();
+  // const { showNotification } = getActions();
+  // const lang = useLang();
   const accounts = useMultiaccountInfo(currentUser);
 
   const currentCount = getCurrentProdAccountCount();
-  const maxCount = getCurrentMaxAccountCount();
+  // const maxCount = getCurrentMaxAccountCount();
 
   const currentAccountInfo = useMemo(() => {
     return Object.values(accounts).find((account) => account.userId === currentUser.id);
   }, [accounts, currentUser.id]);
 
-  const shouldShowLimit = currentCount >= maxCount;
+  // const shouldShowLimit = currentCount >= maxCount;
 
-  const handleAccountClick = useLastCallback((account: AccountInfo) => {
-    if (account.userId === currentUser.id) {
-      onSelectCurrent?.();
-      return;
-    }
-
-    // IDB locks up if we write large payload on navigation
-    if (IS_SAFARI) temporarilySuspendCacheUpdate();
-  });
-
-  const handleNewAccountClick = useLastCallback(() => {
-    if (shouldShowLimit) {
-      showNotification({
-        title: lang('PremiumLimitAccountsTitle'),
-        message: currentUser.isPremium ? lang('PremiumLimitAccounts') : lang('PremiumLimitAccountsNoPremium'),
-        duration: NOTIFICATION_DURATION,
-      });
-      return;
-    }
-
-    if (IS_SAFARI) temporarilySuspendCacheUpdate();
-  });
+  // const handleLimitClick = useLastCallback(() => {
+  //   showNotification({
+  //     title: lang('PremiumLimitAccountsTitle'),
+  //     message: currentUser.isPremium ? lang('PremiumLimitAccounts') : lang('PremiumLimitAccountsNoPremium'),
+  //     duration: NOTIFICATION_DURATION,
+  //   });
+  // });
 
   const newAccountUrl = useMemo(() => {
     if (!Object.values(accounts).length) {
@@ -113,7 +98,7 @@ const AccountMenuItems = ({
                     previewUrl={account.avatarUri}
                   />
                 )}
-                onClick={() => handleAccountClick(account)}
+                // onClick={() => handleAccountClick(account)}
                 href={account.userId !== currentUser.id ? getAccountSlotUrl(Number(slot)) : undefined}
               >
                 {account.isTest && <span className="account-menu-item-test">T</span>}
@@ -123,7 +108,7 @@ const AccountMenuItems = ({
             </>
           );
         })}
-      {newAccountUrl && (
+      {/* {newAccountUrl && (
         <MenuItem
           icon="add"
           rel="noopener" // Allow referrer to be passed
@@ -132,7 +117,7 @@ const AccountMenuItems = ({
         >
           {lang('MenuAddAccount')}
         </MenuItem>
-      )}
+      )} */}
     </>
   );
 };

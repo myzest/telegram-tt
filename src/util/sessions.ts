@@ -1,3 +1,5 @@
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-null/no-null */
 import type { ApiSessionData } from '../api/types';
 import type { DcId, SharedSessionData } from '../types';
 
@@ -7,6 +9,14 @@ import {
   SESSION_ACCOUNT_PREFIX,
   SESSION_LEGACY_USER_KEY,
 } from '../config';
+
+let localStorage = window.localStorage;
+// @ts-ignore
+if (window.__MICRO_APP_ENVIRONMENT__) {
+  // @ts-ignore
+  localStorage = window.rawWindow.localStorage;
+}
+
 import { ACCOUNT_SLOT, storeAccountData, writeSlotSession } from './multiaccount';
 
 export function hasStoredSession() {
@@ -81,18 +91,22 @@ export function clearStoredSession(slot?: number) {
 }
 
 function clearStoredLegacySession() {
-  [
-    SESSION_LEGACY_USER_KEY,
-    'dc',
-    ...DC_IDS.map((dcId) => `dc${dcId}_auth_key`),
-    ...DC_IDS.map((dcId) => `dc${dcId}_hash`),
-    ...DC_IDS.map((dcId) => `dc${dcId}_server_salt`),
-  ].forEach((key) => {
-    localStorage.removeItem(key);
-  });
+  // [
+  //   SESSION_LEGACY_USER_KEY,
+  //   'dc',
+  //   ...DC_IDS.map((dcId) => `dc${dcId}_auth_key`),
+  //   ...DC_IDS.map((dcId) => `dc${dcId}_hash`),
+  //   ...DC_IDS.map((dcId) => `dc${dcId}_server_salt`),
+  // ].forEach((key) => {
+  //   localStorage.removeItem(key);
+  // });
 }
 
 export function loadStoredSession(): ApiSessionData | undefined {
+  if (DEBUG) {
+    console.log('!hasStoredSession():', !hasStoredSession());
+    console.log('userAuth:', localStorage.getItem(SESSION_USER_KEY));
+  }
   if (!hasStoredSession()) {
     return undefined;
   }
@@ -120,6 +134,7 @@ export function loadStoredSession(): ApiSessionData | undefined {
 }
 
 function loadStoredLegacySession(): ApiSessionData | undefined {
+  let hashes = {}
   if (!hasStoredSession()) {
     return undefined;
   }
@@ -135,8 +150,12 @@ function loadStoredLegacySession(): ApiSessionData | undefined {
   DC_IDS.forEach((dcId) => {
     try {
       const key = localStorage.getItem(`dc${dcId}_auth_key`);
-      if (key) {
+      if (key !== null) {
         keys[dcId] = JSON.parse(key);
+      }
+      const hash = localStorage.getItem(`dc${dcId}_hash`);
+      if (hash !== null) {
+        hashes[dcId] = JSON.parse(hash);
       }
     } catch (err) {
       if (DEBUG) {
@@ -147,14 +166,50 @@ function loadStoredLegacySession(): ApiSessionData | undefined {
     }
   });
 
+  if (DEBUG) {
+    console.log('keys:', keys);
+  }
+
   if (!Object.keys(keys).length) return undefined;
 
-  return {
+  const result = {
     mainDcId,
     keys,
     isTest,
+    isLocalStorage: false,
   };
+
+  try {
+    let entourage = localStorage.getItem('user_entourage');
+    // @ts-ignore;
+    entourage = JSON.parse(entourage);
+    if (DEBUG) {
+      console.log('entourage:', entourage);
+    }
+    // @ts-ignore;
+    if (entourage?.apiId && entourage?.apiHash) {
+      // @ts-ignore;
+      result.initConnectionParams = entourage || {};
+      // @ts-ignore;
+      result.apiId = entourage.apiId;
+      // @ts-ignore;
+      result.apiHash = entourage.apiHash;
+    }
+  } catch (error) {
+    console.log('initConnectionParams error:', error);
+  }
+
+  if (DEBUG) {
+    console.log('loadStoredSession result:', result);
+  }
+
+  return result;
 }
+
+export function checkSessionLocked() {
+  return localStorage.getItem(IS_SCREEN_LOCKED_CACHE_KEY) === 'true';
+}
+
 
 export function loadSlotSession(slot: number | undefined): SharedSessionData | undefined {
   try {
@@ -172,6 +227,7 @@ export function updateSessionUserId(currentUserId: string) {
   storeAccountData(ACCOUNT_SLOT, { userId: currentUserId });
 }
 
+
 export function importTestSession() {
   const sessionJson = process.env.TEST_SESSION!;
   try {
@@ -183,8 +239,4 @@ export function importTestSession() {
       console.warn('Failed to load test session', err);
     }
   }
-}
-
-export function checkSessionLocked() {
-  return localStorage.getItem(IS_SCREEN_LOCKED_CACHE_KEY) === 'true';
 }

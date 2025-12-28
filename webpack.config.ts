@@ -1,14 +1,17 @@
 import 'webpack-dev-server';
 import 'dotenv/config';
 
+// import StatoscopeWebpackPlugin from '@statoscope/webpack-plugin';
+import dotenv from 'dotenv';
 import WatchFilePlugin from '@mytonwallet/webpack-watch-file-plugin';
-import StatoscopeWebpackPlugin from '@statoscope/webpack-plugin';
+// import StatoscopeWebpackPlugin from '@statoscope/webpack-plugin';
 import { statSync } from 'fs';
+// import StatoscopeWebpackPlugin from '@statoscope/webpack-plugin';
 import { GitRevisionPlugin } from 'git-revision-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import path from 'path';
-import type { Compiler, Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
 import {
   ContextReplacementPlugin,
   DefinePlugin,
@@ -38,7 +41,7 @@ const {
   APP_TITLE = DEFAULT_APP_TITLE,
 } = process.env;
 
-const CSP = `
+export const CSP = `
   default-src 'self';
   connect-src 'self' wss://*.web.telegram.org blob: http: https: ${APP_ENV === 'development' ? 'wss: ipc:' : ''};
   script-src 'self' 'wasm-unsafe-eval' https://t.me/_websync_ https://telegram.me/_websync_;
@@ -108,16 +111,17 @@ export default function createConfig(
         stats: 'minimal',
       },
       headers: {
-        'Content-Security-Policy': CSP,
+        'Access-Control-Allow-Origin': '*',
       },
     },
 
     output: {
-      filename: '[name].[contenthash].js',
-      chunkFilename: '[id].[chunkhash].js',
-      assetModuleFilename: '[name].[contenthash][ext]',
-      path: path.resolve(__dirname, 'dist'),
+      filename: 'telegram-a.[name].[contenthash].js',
+      chunkFilename: 'telegram-a.[id].[chunkhash].js',
+      assetModuleFilename: 'telegram-a.[name].[contenthash][ext]',
+      path: path.resolve(__dirname, 'dist/'),
       clean: true,
+      publicPath: '/telegram-t/',
     },
 
     module: {
@@ -156,7 +160,7 @@ export default function createConfig(
                   exportLocalsConvention: 'camelCase',
                   auto: true,
                   localIdentName: APP_ENV === 'production' ? '[sha1:hash:base64:8]' : '[name]__[local]',
-                },
+                }
               },
             },
             'postcss-loader',
@@ -211,12 +215,12 @@ export default function createConfig(
         mainIcon: APP_ENV === 'production' ? 'icon-192x192' : 'icon-dev-192x192',
         manifest: APP_ENV === 'production' ? 'site.webmanifest' : 'site_dev.webmanifest',
         baseUrl: BASE_URL,
-        csp: CSP,
+        // csp: CSP,
         template: 'src/index.html',
       }),
       new MiniCssExtractPlugin({
-        filename: '[name].[contenthash].css',
-        chunkFilename: '[name].[chunkhash].css',
+        filename: 'telegram-a.[name].[contenthash].css',
+        chunkFilename: 'telegram-a.[name].[chunkhash].css',
         ignoreOrder: true,
       }),
       new EnvironmentPlugin({
@@ -225,8 +229,9 @@ export default function createConfig(
         // eslint-disable-next-line no-null/no-null
         APP_NAME: null,
         APP_TITLE,
-        TELEGRAM_API_ID: undefined,
-        TELEGRAM_API_HASH: undefined,
+        RELEASE_DATETIME: Date.now(),
+        TELEGRAM_API_ID: Number(process.env.TELEGRAM_API_ID),
+        TELEGRAM_API_HASH: process.env.TELEGRAM_API_HASH,
         // eslint-disable-next-line no-null/no-null
         TEST_SESSION: null,
         BASE_URL,
@@ -248,16 +253,16 @@ export default function createConfig(
       new ProvidePlugin({
         Buffer: ['buffer', 'Buffer'],
       }),
-      new StatoscopeWebpackPlugin({
-        statsOptions: {
-          context: __dirname,
-        },
-        saveReportTo: path.resolve('./public/statoscope-report.html'),
-        saveStatsTo: path.resolve('./public/build-stats.json'),
-        normalizeStats: true,
-        open: false,
-        extensions: [new WebpackContextExtension()],
-      }),
+      // new StatoscopeWebpackPlugin({
+      //   statsOptions: {
+      //     context: __dirname,
+      //   },
+      //   saveReportTo: path.resolve('./public/statoscope-report.html'),
+      //   saveStatsTo: path.resolve('./public/build-stats.json'),
+      //   normalizeStats: true,
+      //   open: false,
+      //   extensions: [new WebpackContextExtension()],
+      // }),
       new WatchFilePlugin({
         rules: [
           {
@@ -301,23 +306,4 @@ function getGitMetadata() {
   const branch = HEAD || gitRevisionPlugin.branch();
   const commit = gitRevisionPlugin.commithash()?.substring(0, 7);
   return { branch, commit };
-}
-
-class WebpackContextExtension {
-  context: string;
-
-  constructor() {
-    this.context = '';
-  }
-
-  handleCompiler(compiler: Compiler) {
-    this.context = compiler.context;
-  }
-
-  getExtension() {
-    return {
-      descriptor: { name: 'custom-webpack-extension-context', version: '1.0.0' },
-      payload: { context: this.context },
-    };
-  }
 }

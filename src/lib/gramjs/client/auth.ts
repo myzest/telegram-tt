@@ -278,9 +278,9 @@ async function signInUserWithQrCode(
       }
 
       const result = await client.invoke(new Api.auth.ExportLoginToken({
-        apiId,
-        apiHash,
-        exceptIds,
+  apiId: Number(client.apiId),
+                apiHash: client.apiHash,
+                exceptIds: [],
       }));
       if (!(result instanceof Api.auth.LoginToken)) {
         throw new Error('Unexpected');
@@ -323,9 +323,9 @@ async function signInUserWithQrCode(
 
   try {
     const result2 = await client.invoke(new Api.auth.ExportLoginToken({
-      apiId,
-      apiHash,
-      exceptIds,
+    apiId: Number(client.apiId),
+            apiHash: client.apiHash,
+            exceptIds: [],
     }));
 
     if (result2 instanceof Api.auth.LoginTokenSuccess && result2.authorization instanceof Api.auth.Authorization) {

@@ -101,10 +101,18 @@ export async function init(initialArgs: ApiInitialArgs, onConnected?: NoneToVoid
 
   (self as any).maxBufferSize = maxBufferSize;
 
+  // @ts-ignore;
+  const { initConnectionParams, apiId, apiHash } = sessionData || {};
+
+  if (DEBUG) {
+    console.log('sessionData:', sessionData);
+    console.log('initialArgs:', initialArgs);
+  }
+
   client = new TelegramClient(
     session,
-    Number(process.env.TELEGRAM_API_ID),
-    process.env.TELEGRAM_API_HASH,
+    Number(apiId || process.env.TELEGRAM_API_ID),
+    apiHash || process.env.TELEGRAM_API_HASH,
     {
       deviceModel: navigator.userAgent || userAgent || DEFAULT_USER_AGENT,
       systemVersion: platform || DEFAULT_PLATFORM,
@@ -119,8 +127,18 @@ export async function init(initialArgs: ApiInitialArgs, onConnected?: NoneToVoid
       langCode,
       systemLangCode: navigator.language,
       isTestServerRequested,
+      ...initConnectionParams,
     } as any,
   );
+
+  if (DEBUG) {
+    console.log('initConnectionParams:', initConnectionParams);
+  }
+
+  client.initConnectionParams = initConnectionParams;
+
+  client.apiId = apiId || process.env.TELEGRAM_API_ID;
+  client.apiHash = apiHash || process.env.TELEGRAM_API_HASH;
 
   client.addEventHandler(handleGramJsUpdate, gramJsUpdateEventBuilder);
 
@@ -297,7 +315,7 @@ export async function invokeRequest<T extends GramJs.AnyRequest>(
 
   try {
     if (DEBUG) {
-      log('INVOKE', request.className);
+      log('INVOKE', request.className, request);
     }
 
     const result = await client.invoke(request, dcId, abortSignal, shouldRetryOnTimeout);

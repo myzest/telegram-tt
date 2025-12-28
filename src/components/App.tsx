@@ -1,6 +1,8 @@
+/* eslint-disable react-hooks-static-deps/exhaustive-deps */
+// @ts-nocheck
+import type { FC } from '../lib/teact/teact';
 import { useEffect, useLayoutEffect } from '../lib/teact/teact';
-import { withGlobal } from '../global';
-
+import { getActions,withGlobal } from '../global';
 import type { GlobalState } from '../global/types';
 import type { ThemeKey } from '../types';
 import type { UiLoaderPage } from './common/UiLoader';
@@ -67,6 +69,21 @@ const App = ({
   theme,
   actionMessageBg,
 }: StateProps) => {
+  // @ts-ignore
+  let body = window.document.querySelector('.telegram-a') as Element;
+  let document = window.document;
+  // @ts-ignore
+  // eslint-disable-next-line no-underscore-dangle
+  if (window.__MICRO_APP_ENVIRONMENT__) {
+    // @ts-ignore
+    // eslint-disable-next-line max-len, @typescript-eslint/no-unused-vars
+    body = (document?.microAppElement?.querySelector?.('.telegram-a') || document.querySelector('.telegram-a')) as Element;
+    // @ts-ignore
+    document = window?.rawDocument || window.document;
+  }
+  const { disconnect } = getActions();
+
+  const [isInactive, markInactive, unmarkInactive] = useFlag(false);
   const { isMobile } = useAppLayout();
   const isMobileOs = PLATFORM_ENV === 'iOS' || PLATFORM_ENV === 'Android';
 
@@ -106,7 +123,6 @@ const App = ({
 
   // Prevent drop on elements that do not accept it
   useEffect(() => {
-    const body = document.body;
     const handleDrag = (e: DragEvent) => {
       e.preventDefault();
       if (!e.dataTransfer) return;
@@ -218,11 +234,12 @@ const App = ({
   useTauriDrag();
 
   useLayoutEffect(() => {
-    document.body.classList.add(styles.bg);
+    body.classList.add(styles.bg);
+    document.body.classList.add(styles.appBg);
   }, []);
 
   useLayoutEffect(() => {
-    document.body.style.setProperty(
+    body.style.setProperty(
       '--theme-background-color',
       theme === 'dark' ? DARK_THEME_BG_COLOR : LIGHT_THEME_BG_COLOR,
     );

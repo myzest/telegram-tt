@@ -1,11 +1,11 @@
-import { getGlobal } from '../global';
+// import { getGlobal } from '../global';
 
 import {
   APP_CODE_NAME,
   DEBUG, IS_MOCKED_CLIENT,
 } from '../config';
 import { IS_TAURI } from './browser/globalEnvironment';
-import { hasStoredSession } from './sessions';
+// import { hasStoredSession } from './sessions';
 
 const WEBSYNC_URLS = [
   't.me',
@@ -78,23 +78,23 @@ export function stopWebsync() {
 }
 
 export function startWebsync() {
-  if (DEBUG || IS_TAURI) {
-    return;
-  }
+  // if (DEBUG || IS_ELECTRON) {
+  //   return;
+  // }
 
-  if (lastTimeout !== undefined) return;
-  const currentTs = getTs();
+  // if (lastTimeout !== undefined) return;
+  // const currentTs = getTs();
 
-  const { ts } = JSON.parse(localStorage.getItem(WEBSYNC_KEY) || '{}');
+  // const { ts } = JSON.parse(localStorage.getItem(WEBSYNC_KEY) || '{}');
 
-  const timeout = WEBSYNC_TIMEOUT - (currentTs - ts);
+  // const timeout = WEBSYNC_TIMEOUT - (currentTs - ts);
 
-  lastTimeout = setTimeout(() => {
-    const { auth } = getGlobal();
+  // lastTimeout = setTimeout(() => {
+  //   const { authState } = getGlobal();
 
-    const authed = auth.state === 'authorizationStateReady' || hasStoredSession();
-    forceWebsync(authed);
-  }, Math.max(0, timeout * 1000));
+  //   const authed = authState === 'authorizationStateReady' || hasStoredSession();
+  //   forceWebsync(authed);
+  // }, Math.max(0, timeout * 1000));
 }
 
 export function clearWebsync() {
